@@ -7,6 +7,11 @@ public final class Ports {
     public static final int DRIVER = 1;
   }
 
+  public static final class Shooter {
+    public static final int LEFT_LEADER = 1;
+    public static final int LEFT_FOLLOWER = 2;
+  }
+
   public static final class Drive {
     public static final int CANANDGYRO = 20;
     public static final int FRONT_LEFT_DRIVE = 11;
