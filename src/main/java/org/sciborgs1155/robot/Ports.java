@@ -8,8 +8,8 @@ public final class Ports {
   }
 
   public static final class Shooter {
-    public static final int LEFT_LEADER = 1;
-    public static final int LEFT_FOLLOWER = 2;
+    public static final int TOP_MOTOR = 1;
+    public static final int BOTTOM_MOTOR = 2;
   }
 
   public static final class Drive {
