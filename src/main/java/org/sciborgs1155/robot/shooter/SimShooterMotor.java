@@ -1,12 +1,12 @@
 package org.sciborgs1155.robot.shooter;
 
-public class NoShooterMotor implements ShooterIO {
-    // Constructor for no motor
-    public NoShooterMotor() {}
+public class SimShooterMotor implements ShooterIO {
+    // Constructor for sim motor
+    public SimShooterMotor() {}
 
     @Override
     public void setVoltage(double Voltage) {}
-    
+
     @Override
     public double getSpeed() {
         return 0;
