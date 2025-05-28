@@ -8,7 +8,7 @@ public class NoShooterMotor implements ShooterIO {
     public void setVoltage(double Voltage) {}
     
     @Override
-    public double getSpeed() {
+    public double getVelocity() {
         return 0;
     }
 }

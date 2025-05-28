@@ -33,7 +33,7 @@ public class RealShooterMotor implements ShooterIO {
     }
 
     @Override
-    public double getSpeed(){
+    public double getVelocity(){
         return encoder.getVelocity();
     }
 }

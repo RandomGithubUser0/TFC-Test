@@ -9,9 +9,9 @@ public interface ShooterIO {
     void setVoltage(double voltage);
 
     /**
-     * Gets the last given speed. 
+     * Gets the velocity of the flywheel in radians / sec. 
      * 
-     * @return The last given speed.
+     * @return The velocity of the flywheel in radians / sec.
      */
-    double getSpeed();
+    double getVelocity();
 }
