@@ -1,12 +1,16 @@
 package org.sciborgs1155.robot.shooter;
 
 import static edu.wpi.first.units.Units.Minute;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 
 public class ShooterConstants {
+  public static final AngularVelocity DEFAULT_VELOCITY = RadiansPerSecond.of(550);
+  public static final AngularVelocity MAX_VELOCITY = RadiansPerSecond.of(630);
+
   public static final Angle POSITION_FACTOR = Rotations.one();
   public static final AngularVelocity VELOCITY_FACTOR = POSITION_FACTOR.per(Minute);
 
