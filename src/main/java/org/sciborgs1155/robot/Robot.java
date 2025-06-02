@@ -20,6 +20,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+
+import org.sciborgs1155.robot.shooter.ShooterConstants;
+
 import java.util.Set;
 import monologue.Annotations.Log;
 import monologue.Logged;
@@ -32,6 +36,7 @@ import org.sciborgs1155.lib.Test;
 import org.sciborgs1155.robot.Ports.OI;
 import org.sciborgs1155.robot.commands.Autos;
 import org.sciborgs1155.robot.drive.Drive;
+import org.sciborgs1155.robot.shooter.Shooter;
 import org.sciborgs1155.robot.vision.Vision;
 
 /**
@@ -50,6 +55,7 @@ public class Robot extends CommandRobot implements Logged {
   // SUBSYSTEMS
   private final Drive drive = Drive.create();
   private final Vision vision = Vision.create();
+  private final Shooter shooter = Shooter.create();
 
   // COMMANDS
   @Log.NT private final SendableChooser<Command> autos = Autos.configureAutos(drive);
@@ -97,6 +103,8 @@ public class Robot extends CommandRobot implements Logged {
     // x and y are switched: we use joystick Y axis to control field x motion
     InputStream x = InputStream.of(driver::getLeftY).negate();
     InputStream y = InputStream.of(driver::getLeftX).negate();
+
+    operator.x().onTrue(shooter.runShooter(() -> ShooterConstants.DEFAULT_VELOCITY.in(RadiansPerSecond)));
 
     // Apply speed multiplier, deadband, square inputs, and scale translation to max speed
     InputStream r =
