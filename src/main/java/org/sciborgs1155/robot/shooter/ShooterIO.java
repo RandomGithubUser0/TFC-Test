@@ -1,6 +1,8 @@
 package org.sciborgs1155.robot.shooter;
 
-public interface ShooterIO {
+import monologue.Logged;
+
+public interface ShooterIO extends AutoCloseable, Logged {
     /**
      * Sets the velocity of the two motors for shooting.
      * 

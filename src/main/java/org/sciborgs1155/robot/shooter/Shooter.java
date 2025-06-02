@@ -2,18 +2,16 @@ package org.sciborgs1155.robot.shooter;
 
 import org.sciborgs1155.robot.Ports;
 import org.sciborgs1155.robot.Robot;
-import org.sciborgs1155.robot.shooter.ShooterConstants.Bottom;
-import org.sciborgs1155.robot.shooter.ShooterConstants.Top;
-
-import static org.sciborgs1155.robot.shooter.ShooterConstants.kP;
+import org.sciborgs1155.robot.shooter.ShooterConstants.BottomFF;
+import org.sciborgs1155.robot.shooter.ShooterConstants.TopFF;
+import org.sciborgs1155.robot.shooter.ShooterConstants.TopPID;
+import org.sciborgs1155.robot.shooter.ShooterConstants.BottomPID;
 
 import java.util.function.DoubleSupplier;
 
-import static org.sciborgs1155.robot.shooter.ShooterConstants.kI;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static org.sciborgs1155.robot.shooter.ShooterConstants.DEFAULT_VELOCITY;
 import static org.sciborgs1155.robot.shooter.ShooterConstants.MAX_VELOCITY;
-import static org.sciborgs1155.robot.shooter.ShooterConstants.kD;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
@@ -34,13 +32,13 @@ public class Shooter extends SubsystemBase implements AutoCloseable, Logged {
 
     // Create the FeedForward objects for the shooter motors.
     private final SimpleMotorFeedforward topFeedForward =
-        new SimpleMotorFeedforward(Top.kS, Top.kV, Top.kA);
+        new SimpleMotorFeedforward(TopFF.kS, TopFF.kV, TopFF.kA);
     private final SimpleMotorFeedforward bottomFeedForward =
-        new SimpleMotorFeedforward(Bottom.kS, Bottom.kV, Bottom.kA); 
+        new SimpleMotorFeedforward(BottomFF.kS, BottomFF.kV, BottomFF.kA); 
 
     // Create the PID objects for the shooter motors.
-    @Log.NT private final PIDController topPID = new PIDController(kP, kI, kD);
-    @Log.NT private final PIDController bottomPID = new PIDController(kP, kI, kD);
+    @Log.NT private final PIDController topPID = new PIDController(TopPID.kP, TopPID.kI, TopPID.kD);
+    @Log.NT private final PIDController bottomPID = new PIDController(BottomPID.kP, BottomPID.kI, BottomPID.kD);
 
     // Factory method for constructing
     public static Shooter create(){
@@ -108,7 +106,7 @@ public class Shooter extends SubsystemBase implements AutoCloseable, Logged {
     }
 
     /**
-     * Run the shooter at a specified velocity.
+     * Run the shooter at a specified velocity. (Two different velocities for each motor)
      *
      * @param velocity The desired velocity in radians per second.
      * @return The command to set the shooter's velocity.
@@ -120,9 +118,24 @@ public class Shooter extends SubsystemBase implements AutoCloseable, Logged {
         )).withName("running shooter");
     }
 
-    @Override
-    public void close() throws Exception {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'close'");
+    /**
+     * Run the shooter at a specified velocity. (Uses the same velocity for both motors)
+     *
+     * @param velocity The desired velocity in radians per second.
+     * @return The command to set the shooter's velocity.
+     */
+    public Command runShooter(DoubleSupplier velocity) {
+        return run(() -> update(
+            velocity.getAsDouble(),
+            velocity.getAsDouble()
+        )).withName("running shooter");
     }
+
+    @Override
+    public void close() throws Exception {  
+        shooterTop.close();
+        shooterBottom.close();
+    }
+
+
 }

@@ -11,4 +11,9 @@ public class NoShooterMotor implements ShooterIO {
     public double getVelocity() {
         return 0;
     }
+
+    @Override
+    public void close() {
+        // No resources to close in no motor scenario
+    }
 }
