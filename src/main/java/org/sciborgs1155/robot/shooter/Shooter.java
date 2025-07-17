@@ -1,0 +1,141 @@
+package org.sciborgs1155.robot.shooter;
+
+import org.sciborgs1155.robot.Ports;
+import org.sciborgs1155.robot.Robot;
+import org.sciborgs1155.robot.shooter.ShooterConstants.BottomFF;
+import org.sciborgs1155.robot.shooter.ShooterConstants.TopFF;
+import org.sciborgs1155.robot.shooter.ShooterConstants.TopPID;
+import org.sciborgs1155.robot.shooter.ShooterConstants.BottomPID;
+
+import java.util.function.DoubleSupplier;
+
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static org.sciborgs1155.robot.shooter.ShooterConstants.DEFAULT_VELOCITY;
+import static org.sciborgs1155.robot.shooter.ShooterConstants.MAX_VELOCITY;
+
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import monologue.Logged;
+import monologue.Annotations.Log;
+
+public class Shooter extends SubsystemBase implements AutoCloseable, Logged {
+    // Utilizes two motor objects rather than using one entire shooter for versitility.
+    private final ShooterIO shooterTop;
+    private final ShooterIO shooterBottom;
+
+    // Setpoints for the shooter motors
+    @Log.NT private double topSetpoint;
+    @Log.NT private double bottomSetpoint;
+
+    // Create the FeedForward objects for the shooter motors.
+    private final SimpleMotorFeedforward topFeedForward =
+        new SimpleMotorFeedforward(TopFF.kS, TopFF.kV, TopFF.kA);
+    private final SimpleMotorFeedforward bottomFeedForward =
+        new SimpleMotorFeedforward(BottomFF.kS, BottomFF.kV, BottomFF.kA); 
+
+    // Create the PID objects for the shooter motors.
+    @Log.NT private final PIDController topPID = new PIDController(TopPID.kP, TopPID.kI, TopPID.kD);
+    @Log.NT private final PIDController bottomPID = new PIDController(BottomPID.kP, BottomPID.kI, BottomPID.kD);
+
+    // Factory method for constructing
+    public static Shooter create(){
+        return Robot.isReal() 
+        ? new Shooter( // Inversion to make shooter properly shoot
+            new RealShooterMotor(Ports.Shooter.TOP_MOTOR, false),
+            new RealShooterMotor(Ports.Shooter.BOTTOM_MOTOR, true)
+        ) 
+        : new Shooter(
+            new SimShooterMotor(),
+            new SimShooterMotor()
+        );
+    }
+
+    // Factory method for fake shooter
+    public static Shooter fake() {
+        return new Shooter(new NoShooterMotor(), new NoShooterMotor());
+    }
+
+    // Main constructor
+    public Shooter(ShooterIO shooterTop, ShooterIO shooterBottom) {
+        this.shooterTop = shooterTop;
+        this.shooterBottom = shooterBottom;
+    }
+
+    public void setVoltage(ShooterIO motor, double voltage) {
+        motor.setVoltage(voltage);
+    }
+
+    @Log.NT
+    public double getVelocity(ShooterIO motor) {
+        return motor.getVelocity();
+    }
+
+    public double calculateVelocity(double velocitySetPoint) {
+        return Double.isNaN(velocitySetPoint)
+            ? DEFAULT_VELOCITY.in(RadiansPerSecond)
+            : MathUtil.clamp(
+                velocitySetPoint,
+                -MAX_VELOCITY.in(RadiansPerSecond),
+                MAX_VELOCITY.in(RadiansPerSecond));
+    }
+
+    // Periodic method used to give the motors voltage based on PID and FeedForward
+    public void update(double velocitySetPointTop, double velocitySetPointBottom) {
+        double velocityTop = calculateVelocity(velocitySetPointTop);
+        double velocityBottom;
+        if (velocitySetPointBottom == velocitySetPointTop){ // If statement to prevent redundant calculations
+            velocityBottom = velocityTop;
+        } else {
+            velocityBottom = calculateVelocity(velocitySetPointBottom);
+        }
+        double topFF = topFeedForward.calculate(velocityTop);
+        double topPIDOut = topPID.calculate(shooterTop.getVelocity(), velocityTop);
+        double bottomFF = bottomFeedForward.calculate(velocityBottom);
+        double bottomPIDOut = bottomPID.calculate(shooterBottom.getVelocity(), velocityBottom);
+        log("top output", topFF + topPIDOut);
+        log("bottom output", bottomFF + bottomPIDOut);
+
+        shooterTop.setVoltage(MathUtil.clamp(topFF + topPIDOut, -12, 12));
+        shooterBottom.setVoltage(MathUtil.clamp(bottomFF + bottomPIDOut, -12, 12));
+
+        topSetpoint = velocityTop;
+        bottomSetpoint = velocityBottom;
+    }
+
+    /**
+     * Run the shooter at a specified velocity. (Two different velocities for each motor)
+     *
+     * @param velocity The desired velocity in radians per second.
+     * @return The command to set the shooter's velocity.
+     */
+    public Command runShooter(DoubleSupplier velocityTop, DoubleSupplier velocityBottom) {
+        return run(() -> update(
+            velocityTop.getAsDouble(),
+            velocityBottom.getAsDouble()
+        )).withName("running shooter");
+    }
+
+    /**
+     * Run the shooter at a specified velocity. (Uses the same velocity for both motors)
+     *
+     * @param velocity The desired velocity in radians per second.
+     * @return The command to set the shooter's velocity.
+     */
+    public Command runShooter(DoubleSupplier velocity) {
+        return run(() -> update(
+            velocity.getAsDouble(),
+            velocity.getAsDouble()
+        )).withName("running shooter");
+    }
+
+    @Override
+    public void close() throws Exception {  
+        shooterTop.close();
+        shooterBottom.close();
+    }
+
+
+}
